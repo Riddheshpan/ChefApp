@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ChefHat, CookingPot, Timer, Utensils, AlertTriangle, Loader2 } from 'lucide-react';
 
 // Configuration for the Gemini API call
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent";
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 const recipeSchema = {
@@ -180,118 +180,167 @@ The entire response MUST be a single JSON object conforming to the provided sche
         <div className="app-container">
             <style>
                 {`
-                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
                     
-                    /* Base Styles */
-                    .app-container {
-                        min-height: 100vh;
-                        background-color: #f4f7f9;
-                        padding: 20px 16px;
-                        font-family: 'Inter', sans-serif;
-                        box-sizing: border-box;
-                    }
-                    .main-content {
-                        max-width: 1200px;
-                        margin: 0 auto;
-                        width: 100%;
+                    /* === DESIGN SYSTEM === */
+                    :root {
+                        --primary: #4f46e5;      /* Indigo 600 */
+                        --primary-hover: #4338ca; /* Indigo 700 */
+                        --secondary: #ec4899;    /* Pink 500 */
+                        --bg-color: #f8fafc;     /* Slate 50 */
+                        --card-bg: #ffffff;
+                        --text-main: #0f172a;    /* Slate 900 */
+                        --text-muted: #64748b;   /* Slate 500 */
+                        --border-color: #e2e8f0; /* Slate 200 */
+                        
+                        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+                        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+                        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+                        --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+                        
+                        --radius-md: 12px;
+                        --radius-lg: 16px;
                     }
 
-                    /* Header */
+                    /* === BASE POINTERS === */
+                    .app-container {
+                        min-height: 100vh;
+                        background-color: var(--bg-color);
+                        padding: 20px 16px;
+                        font-family: 'Inter', sans-serif;
+                        color: var(--text-main);
+                        display: flex;
+                        justify-content: center;
+                    }
+
+                    .main-content {
+                        width: 100%;
+                        max-width: 1200px;
+                        margin: 0 auto;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 24px;
+                    }
+
+                    /* === RESPONSIVE LAYOUT === */
+                    @media (min-width: 768px) {
+                        .app-container { padding: 40px 32px; }
+                        .main-content { gap: 40px; }
+                    }
+                    @media (min-width: 1024px) {
+                        .app-container { padding: 60px 40px; }
+                    }
+
+                    /* === HEADER === */
                     .header {
                         text-align: center;
-                        padding: 20px 0 30px;
+                        padding: 20px 0;
+                        animation: fadeInDown 0.6s ease-out;
                     }
                     .header h1 {
-                        font-size: 2rem;
+                        font-size: 2.25rem;
                         font-weight: 800;
-                        color: #4338ca; 
-                        margin: 0;
-                        line-height: 1.2;
+                        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        margin: 0 0 16px 0;
+                        letter-spacing: -0.025em;
+                        line-height: 1.1;
                     }
                     .header p {
-                        margin-top: 8px;
-                        font-size: 1rem;
-                        color: #4f46e5; 
-                        opacity: 0.9;
+                        font-size: 1.1rem;
+                        color: var(--text-muted);
+                        margin: 0 auto;
+                        max-width: 600px;
+                        line-height: 1.5;
                     }
-                    
-                    /* Form Card */
+                    @media (min-width: 768px) {
+                        .header h1 { font-size: 3.5rem; }
+                        .header p { font-size: 1.25rem; }
+                    }
+
+                    /* === FORM CARD === */
                     .form-card {
-                        padding: 20px;
-                        background-color: white;
-                        border-radius: 16px;
-                        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                        border: 1px solid #e5e7eb;
-                        margin: 0 auto 32px auto;
-                        max-width: 700px; /* Optimal reading width for forms */
+                        background: var(--card-bg);
+                        border-radius: var(--radius-lg);
+                        box-shadow: var(--shadow-lg);
+                        padding: 24px;
+                        border: 1px solid var(--border-color);
+                        transition: transform 0.2s ease;
+                        max-width: 800px;
+                        margin: 0 auto;
+                        width: 100%;
+                        box-sizing: border-box;
                     }
-                    .form-group {
-                        margin-bottom: 24px;
+                    @media (min-width: 1024px) {
+                        .form-card:hover { transform: translateY(-2px); }
+                        .form-card { padding: 40px; }
                     }
+
+                    .form-group { margin-bottom: 24px; }
+                    
                     .form-label {
                         display: block;
                         font-size: 0.95rem;
                         font-weight: 600;
-                        color: #374151;
+                        color: var(--text-main);
                         margin-bottom: 8px;
                     }
+
                     .text-input {
                         width: 100%;
-                        padding: 12px 16px;
-                        border: 1px solid #d1d5db;
-                        border-radius: 10px;
-                        box-sizing: border-box;
+                        padding: 14px 16px;
+                        border: 1px solid var(--border-color);
+                        border-radius: var(--radius-md);
                         font-size: 1rem;
                         transition: all 0.2s;
-                        background-color: #f9fafb;
-                        color: #000000;
+                        background-color: #f8fafc;
+                        color: var(--text-main);
+                        box-sizing: border-box;
                     }
                     .text-input:focus {
-                        border-color: #6366f1; 
+                        border-color: var(--primary);
                         background-color: white;
                         outline: none;
-                        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+                        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
                     }
-                    
-                    /* Radio Buttons */
+
+                    /* Radio Grid */
                     .radio-group {
-                        display: flex;
-                        flex-wrap: wrap; 
+                        display: grid;
+                        grid-template-columns: 1fr;
                         gap: 12px;
                     }
+                    @media (min-width: 500px) {
+                        .radio-group { grid-template-columns: repeat(2, 1fr); }
+                    }
+
                     .radio-label {
-                        display: inline-flex;
+                        display: flex;
                         align-items: center;
                         cursor: pointer;
-                        padding: 10px 16px;
-                        background-color: white;
-                        border: 1px solid #d1d5db;
-                        border-radius: 8px;
+                        padding: 12px 16px;
+                        border: 1px solid var(--border-color);
+                        border-radius: var(--radius-md);
                         transition: all 0.2s;
-                        color: #000000;
+                        background-color: white;
                     }
                     .radio-label:hover {
-                         border-color: #6366f1;
-                         background-color: #eef2ff;
+                        border-color: var(--primary);
+                        background-color: #eef2ff;
                     }
                     .radio-label:has(input:checked) {
-                        border-color: #4f46e5;
-                        background-color: #e0e7ff;
-                        color: #312e81;
-                    }
-                    .radio-label span { 
-                        color: inherit; 
-                        font-size: 1rem;
-                        font-weight: 500;
-                        margin-left: 8px;
+                        border-color: var(--primary);
+                        background-color: #eef2ff;
+                        box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
                     }
                     .radio-input {
-                        margin: 0;
-                        color: #4f46e5;
-                        width: 16px;
-                        height: 16px;
-                        accent-color: #4f46e5;
+                        margin-right: 12px;
+                        accent-color: var(--primary);
+                        width: 18px;
+                        height: 18px;
                     }
+                    .radio-label span { font-weight: 500; }
 
                     /* Button */
                     .btn-submit {
@@ -301,192 +350,155 @@ The entire response MUST be a single JSON object conforming to the provided sche
                         align-items: center;
                         padding: 16px;
                         border: none;
-                        border-radius: 10px;
-                        font-size: 1.125rem;
-                        font-weight: 600;
+                        border-radius: var(--radius-md);
+                        font-size: 1.1rem;
+                        font-weight: 700;
                         color: white;
-                        box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
-                        transition: all 0.2s;
-                        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+                        background: radial-gradient(circle at top left, var(--primary), var(--primary-hover));
+                        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
                         cursor: pointer;
+                        transition: all 0.3s;
                     }
                     .btn-submit:hover:not(:disabled) {
-                        transform: translateY(-1px);
-                        box-shadow: 0 8px 12px rgba(79, 70, 229, 0.3);
+                        transform: translateY(-2px);
+                        box-shadow: 0 8px 16px rgba(79, 70, 229, 0.4);
                     }
-                    .btn-submit:active:not(:disabled) {
-                        transform: translateY(0);
-                    }
+                    .btn-submit:active:not(:disabled) { transform: translateY(0); }
                     .btn-submit:disabled {
-                        background: #9ca3af;
+                        opacity: 0.7;
                         cursor: not-allowed;
-                        box-shadow: none;
-                    }
-                    .loader-icon {
-                        margin-right: 10px;
-                        animation: spin 1s linear infinite;
-                    }
-                    @keyframes spin {
-                        to { transform: rotate(360deg); }
+                        background: var(--text-muted);
                     }
 
-                    /* Error Display */
-                    .error-message {
-                        margin: 24px auto;
-                        padding: 16px;
-                        background-color: #fee2e2; 
-                        border-left: 4px solid #ef4444; 
-                        color: #b91c1c; 
-                        border-radius: 6px;
-                        display: flex;
-                        align-items: center;
-                        gap: 12px;
-                        font-weight: 500;
-                        max-width: 700px;
-                    }
-
-                    /* Recipe Card */
+                    /* === RECIPE CARD === */
                     .recipe-card {
-                        padding: 24px;
-                        background-color: white;
-                        border-radius: 16px;
-                        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-                        border: 1px solid #e0e7ff; 
-                        margin: 32px auto 0 auto;
-                        max-width: 1000px; /* Wider for results */
-                        animation: fadeIn 0.6s ease-out;
-                    }
-                    @keyframes fadeIn {
-                        from { opacity: 0; transform: translateY(20px); }
-                        to { opacity: 1; transform: translateY(0); }
+                        background: white;
+                        border-radius: var(--radius-lg);
+                        box-shadow: var(--shadow-xl);
+                        border: 1px solid var(--border-color);
+                        overflow: hidden;
+                        animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                        width: 100%;
                     }
                     
                     .recipe-header {
+                        padding: 24px;
+                        background: linear-gradient(to right, #e0e7ff, #fae8ff);
+                        border-bottom: 1px solid #e0e7ff;
                         display: flex;
                         flex-direction: column;
                         gap: 16px;
-                        margin-bottom: 24px;
-                        padding-bottom: 24px;
-                        border-bottom: 1px solid #f3f4f6; 
                     }
-                    .icon-header {
-                        color: #4f46e5;
-                        background: #eef2ff;
-                        padding: 12px;
-                        border-radius: 12px; 
+                    @media (min-width: 768px) {
+                        .recipe-header {
+                            padding: 32px;
+                            flex-direction: row;
+                            align-items: center;
+                        }
                     }
+
                     .recipe-name {
-                        font-size: 1.8rem;
+                        font-size: 1.75rem;
                         font-weight: 800;
-                        color: #111827; 
+                        color: #1e1b4b;
                         margin: 0;
                         line-height: 1.1;
                     }
+                    @media (min-width: 768px) { .recipe-name { font-size: 2.5rem; } }
+
+                    .recipe-content-body { padding: 24px; }
+                    @media (min-width: 1024px) { .recipe-content-body { padding: 40px; } }
+
                     .recipe-description {
                         font-size: 1.1rem;
                         line-height: 1.6;
-                        color: #4b5563;
+                        color: var(--text-main);
                         margin-bottom: 24px;
                         font-style: italic;
                     }
-                    .recipe-time {
-                         display: inline-flex;
-                         align-items: center;
-                         background: #f3f4f6;
-                         padding: 6px 12px;
-                         border-radius: 20px;
-                         font-size: 0.9rem;
-                         color: #374151;
-                         font-weight: 500;
-                    }
 
+                    /* Recipe Grid - Laptop Optimized */
                     .recipe-details-grid {
                         display: grid;
                         gap: 24px;
-                        grid-template-columns: 1fr; 
+                        grid-template-columns: 1fr;
                     }
-                    
+                    @media (min-width: 900px) {
+                        .recipe-details-grid {
+                            grid-template-columns: 1fr 1.5fr; /* Ingredients left, Instructions right */
+                            gap: 32px;
+                        }
+                    }
+
                     .ingredients-box, .instructions-box {
                         padding: 24px;
-                        border-radius: 12px;
-                        height: fit-content;
+                        border-radius: var(--radius-md);
+                        border: 1px solid transparent;
                     }
                     .ingredients-box {
-                        background-color: #f5f3ff; /* Softer violet */
-                        border: 1px solid #ddd6fe;
+                        background-color: #f5f3ff;
+                        border-color: #e0e7ff;
                     }
                     .instructions-box {
-                        background-color: #fffbeb; /* Softer yellow */
-                         border: 1px solid #fde68a;
+                        background-color: #fffbeb;
+                        border-color: #fef3c7;
                     }
+
                     .details-title {
                         display: flex;
                         align-items: center;
                         font-size: 1.25rem;
                         font-weight: 700;
-                        padding-bottom: 12px;
                         margin-bottom: 16px;
+                        padding-bottom: 12px;
                         border-bottom: 2px solid rgba(0,0,0,0.05);
                     }
-                    .ingredients-box .details-title { color: #5b21b6; }
-                    .instructions-box .details-title { color: #92400e; }
-                    
-                    .details-list {
-                        padding-left: 20px;
-                        margin: 0;
-                        color: #374151; 
-                    }
+                    .ingredients-box .details-title { color: var(--primary); }
+                    .instructions-box .details-title { color: #b45309; }
+
                     .details-list li {
-                        margin-bottom: 12px;
-                        font-size: 1rem;
-                        line-height: 1.6;
+                        margin-bottom: 10px;
+                        line-height: 1.5;
+                        padding-left: 8px;
                     }
+                    
+                    /* Utilities */
+                    .text-center { text-align: center; }
+                    .hidden { display: none; }
 
-                    /* Placeholder */
+                    /* Animations */
+                    @keyframes fadeInDown {
+                        from { opacity: 0; transform: translateY(-20px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    @keyframes slideUp {
+                        from { opacity: 0; transform: translateY(30px); }
+                        to { opacity: 1; transform: translateY(0); }
+                    }
+                    .loader-icon { animation: spin 1s linear infinite; }
+                    @keyframes spin { to { transform: rotate(360deg); } }
+
+                    .error-message {
+                        background-color: #fef2f2;
+                        border: 1px solid #fee2e2;
+                        color: #991b1b;
+                        padding: 16px;
+                        border-radius: var(--radius-md);
+                        display: flex;
+                        align-items: center;
+                        gap: 12px;
+                        margin-top: 24px;
+                        font-weight: 500;
+                    }
+                    
                     .placeholder {
-                        margin: 40px auto;
-                        padding: 40px 20px;
+                        margin-top: 40px;
+                        padding: 40px;
                         text-align: center;
-                        background-color: rgba(255,255,255,0.5);
-                        border-radius: 12px;
-                        border: 2px dashed #cbd5e1; 
-                        color: #64748b; 
-                        max-width: 600px;
-                    }
-                    
-                    /* === RESPONSIVE QUERIES === */
-                    
-                    /* Tablet */
-                    @media (min-width: 640px) {
-                        .app-container {
-                            padding: 40px 24px;
-                        }
-                    }
-
-                    /* Laptop / Desktop */
-                    @media (min-width: 1024px) {
-                         .app-container {
-                            padding: 40px 40px;
-                         }
-                         .header h1 {
-                            font-size: 3rem;
-                         }
-                         .recipe-header {
-                            flex-direction: row;
-                            align-items: center;
-                         }
-                         .recipe-name {
-                            font-size: 2.5rem;
-                         }
-                         
-                         .recipe-details-grid {
-                            grid-template-columns: 1fr 1.5fr; /* 2 columns: Ingredients narrower than Instructions */
-                            gap: 40px;
-                         }
-                         
-                         .ingredients-box, .instructions-box {
-                            padding: 32px;
-                         }
+                        border: 2px dashed var(--border-color);
+                        border-radius: var(--radius-lg);
+                        color: var(--text-muted);
+                        background: #f8fafc;
                     }
                 `}
             </style>
