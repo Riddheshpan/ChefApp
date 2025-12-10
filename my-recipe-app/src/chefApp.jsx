@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ChefHat, CookingPot, Timer, Utensils, AlertTriangle, Loader2 } from 'lucide-react';
 
 // Configuration for the Gemini API call
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-001:generateContent";
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 const recipeSchema = {
