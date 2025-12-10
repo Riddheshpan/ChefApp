@@ -244,6 +244,7 @@ The entire response MUST be a single JSON object conforming to the provided sche
                         font-size: 1rem;
                         transition: all 0.2s;
                         background-color: #f9fafb;
+                        color: #000000;
                     }
                     .text-input:focus {
                         border-color: #6366f1; 
@@ -267,6 +268,7 @@ The entire response MUST be a single JSON object conforming to the provided sche
                         border: 1px solid #d1d5db;
                         border-radius: 8px;
                         transition: all 0.2s;
+                        color: #000000;
                     }
                     .radio-label:hover {
                          border-color: #6366f1;
@@ -503,7 +505,7 @@ The entire response MUST be a single JSON object conforming to the provided sche
                         {/* Ingredients */}
                         <div className="form-group">
                             <label htmlFor="ingredients" className="form-label">
-                                1. What main ingredients do you have? (e.g., Chicken breast, rice, broccoli)
+                                1. What main ingredients do you have? (e.g., rice, broccoli)
                             </label>
                             <input
                                 type="text"
