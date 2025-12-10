@@ -35,27 +35,36 @@ const recipeSchema = {
 };
 
 // Utility function to handle API calls with exponential backoff
-const fetchWithRetry = async (url, options, maxRetries = 5) => {
+const fetchWithRetry = async (url, options, maxRetries = 3) => {
     let lastError;
     for (let i = 0; i < maxRetries; i++) {
         try {
             const response = await fetch(url, options);
             if (!response.ok) {
-                if (response.status === 400) {
-                    throw new Error("Bad Request: Invalid input to the API.");
+                const errorText = await response.text();
+                let errorMessage = `HTTP error! status: ${response.status}`;
+                try {
+                    const errorJson = JSON.parse(errorText);
+                    if (errorJson.error && errorJson.error.message) {
+                        errorMessage = `API Error: ${errorJson.error.message} (${response.status})`;
+                    }
+                } catch (e) {
+                    // Fallback to text if not JSON
+                    if (errorText) errorMessage = `API Error: ${errorText} (${response.status})`;
                 }
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(errorMessage);
             }
             return response;
         } catch (error) {
+            console.error(`Attempt ${i + 1} failed:`, error);
             lastError = error;
-            const delay = Math.pow(2, i) * 1000 + Math.random() * 1000;
             if (i < maxRetries - 1) {
+                const delay = Math.pow(2, i) * 1000;
                 await new Promise(resolve => setTimeout(resolve, delay));
             }
         }
     }
-    throw new Error(`API call failed after ${maxRetries} attempts: ${lastError.message}`);
+    throw lastError;
 };
 
 
