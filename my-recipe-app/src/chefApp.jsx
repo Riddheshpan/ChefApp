@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { ChefHat, CookingPot, Timer, Utensils, AlertTriangle, Loader2 } from 'lucide-react';
 
 // Configuration for the Gemini API call
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
 const recipeSchema = {
@@ -101,32 +101,69 @@ The entire response MUST be a single JSON object conforming to the provided sche
 
         // 2. Construct the API payload
         const payload = {
-            contents: [{ parts: [{ text: userQuery }] }],
+            contents: [
+                {
+                    parts: [
+                        {
+                            text: `You are an expert, world-class chef AI. 
+                            Your sole purpose is to create novel, detailed, and delicious recipes that strictly adhere to all user criteria and restrictions. 
+                            Output only a valid JSON object with the following schema:
+                            ${JSON.stringify(recipeSchema)}
+
+                            User request:
+                            ${userQuery}`
+                        }
+                    ]
+                }
+            ],
             generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: recipeSchema,
                 temperature: 0.7,
-            },
-            systemInstruction: {
-                parts: [{ text: "You are an expert, world-class chef AI. Your sole purpose is to create novel, detailed, and delicious recipes that strictly adhere to all user criteria and restrictions. Output only the requested JSON object." }]
+                maxOutputTokens: 4096
             }
         };
+
 
         try {
             const response = await fetchWithRetry(`${API_URL}?key=${apiKey}`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                },
                 body: JSON.stringify(payload)
             });
 
             const result = await response.json();
+            console.log(result);
 
-            if (!result.candidates?.[0]?.content?.parts?.[0]?.text) {
+            const candidate = result.candidates?.[0];
+            if (!candidate?.content?.parts?.[0]?.text) {
                 const errorMessage = result.error?.message || "Received an empty or malformed response from the AI.";
                 throw new Error(errorMessage);
             }
 
-            const jsonString = result.candidates[0].content.parts[0].text;
+            if (candidate.finishReason && candidate.finishReason !== "STOP") {
+                console.warn("AI Finish Reason:", candidate.finishReason);
+                // If it's pure truncation, we warn but try to parse what we have (though it usually fails for JSON)
+                if (candidate.finishReason === "MAX_TOKENS") {
+                    throw new Error("Recipe generation was cut off (token limit reached). Please try again.");
+                }
+                if (candidate.finishReason === "SAFETY") {
+                    throw new Error("Recipe generation was blocked for safety reasons.");
+                }
+            }
+
+            const contentText = candidate.content.parts[0].text;
+
+            // Robust cleanup: Find the first '{' and the last '}'
+            const startIndex = contentText.indexOf('{');
+            const endIndex = contentText.lastIndexOf('}');
+
+            if (startIndex === -1 || endIndex === -1) {
+                console.error("Full AI Response:", contentText);
+                throw new Error(`No JSON object found. AI Response: ${contentText.substring(0, 100)}...`);
+            }
+
+            const jsonString = contentText.substring(startIndex, endIndex + 1);
             const parsedRecipe = JSON.parse(jsonString);
 
             if (!parsedRecipe.recipeName || !Array.isArray(parsedRecipe.ingredients)) {
